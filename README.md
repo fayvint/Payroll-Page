@@ -1,1 +1,491 @@
-# Payroll-Page
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PT. Ardiya Prima Abadi - Payroll</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #000000;
+            color: #ffffff;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #18181b; }
+        ::-webkit-scrollbar-thumb { background: #065f46; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #047857; }
+
+        /* Input auto-fill styling for dark mode */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus, 
+        input:-webkit-autofill:active{
+            -webkit-box-shadow: 0 0 0 30px #27272a inset !important;
+            -webkit-text-fill-color: white !important;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+
+        /* Smooth transitions */
+        .fade-in { animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media print {
+            @page { margin: 20mm; }
+            body { 
+                background-color: #ffffff !important; 
+                color: #000000 !important; 
+            }
+            /* Hide UI elements during print */
+            .no-print, #logout-btn, button, .remove-btn { display: none !important; }
+            
+            /* Reformat the main container for paper */
+            #app-container {
+                box-shadow: none !important;
+                background-color: transparent !important;
+                border: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                max-width: 100% !important;
+            }
+
+            /* Convert inputs to text appearance */
+            input, textarea {
+                border: none !important;
+                background: transparent !important;
+                color: #000000 !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                resize: none !important;
+                box-shadow: none !important;
+                pointer-events: none;
+            }
+
+            /* Force text colors to black for contrast */
+            .text-white, .text-zinc-400, .text-green-500, .text-emerald-400 {
+                color: #000000 !important;
+            }
+
+            /* Print-specific header */
+            .print-header::before {
+                content: 'OFFICIAL SALARY SLIP';
+                display: block;
+                font-size: 24px;
+                font-weight: bold;
+                text-align: center;
+                margin-bottom: 20px;
+                border-bottom: 2px solid #000;
+                padding-bottom: 10px;
+            }
+
+            /* Adjust borders for print */
+            .border-zinc-800 { border-color: #e5e7eb !important; }
+            .bg-zinc-900 { background-color: #ffffff !important; }
+            .bg-zinc-800 { background-color: #ffffff !important; }
+            .bg-green-900 { background-color: #f3f4f6 !important; -webkit-print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 sm:p-8">
+
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen" class="w-full max-w-md bg-zinc-900 rounded-2xl shadow-2xl shadow-green-900/20 p-8 border border-zinc-800 fade-in">
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-900/30 text-green-500 mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+            </div>
+            <h2 class="text-2xl font-bold text-white">Finance Portal</h2>
+            <p class="text-zinc-400 mt-2 text-sm">Sign in to access PT. Ardiya Prima Abadi Payroll</p>
+        </div>
+
+        <form id="login-form" class="space-y-5">
+            <div>
+                <label class="block text-sm font-medium text-zinc-400 mb-1">Username</label>
+                <input type="text" id="username" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all" placeholder="Enter username" autocomplete="off">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-zinc-400 mb-1">Password</label>
+                <input type="password" id="password" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all" placeholder="Enter password">
+            </div>
+            
+            <div id="login-error" class="hidden text-red-400 text-sm text-center bg-red-400/10 py-2 rounded-lg border border-red-400/20">
+                Invalid username or password.
+            </div>
+
+            <button type="submit" class="w-full bg-green-700 hover:bg-green-600 text-white font-semibold py-3 rounded-lg transition-colors shadow-lg shadow-green-900/30 active:scale-[0.98]">
+                Secure Login
+            </button>
+        </form>
+    </div>
+
+    <!-- MAIN APP SCREEN -->
+    <div id="app-screen" class="hidden w-full max-w-4xl fade-in">
+        <div id="app-container" class="bg-zinc-900 rounded-2xl shadow-2xl shadow-green-900/10 border border-zinc-800 overflow-hidden print-header">
+            
+            <!-- Header -->
+            <div class="bg-zinc-950 px-8 py-6 flex justify-between items-center border-b border-zinc-800">
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        PT. Ardiya Prima Abadi - Payroll
+                    </h1>
+                    <p class="text-zinc-500 text-sm mt-1 no-print">Manage and export employee salary data of PT. Ardiya Prima Abadi</p>
+                </div>
+                <button id="logout-btn" class="text-zinc-400 hover:text-white flex items-center gap-2 transition-colors px-3 py-2 rounded-lg hover:bg-zinc-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    <span class="hidden sm:inline">Logout</span>
+                </button>
+            </div>
+
+            <!-- Content Body -->
+            <div class="p-6 sm:p-8 space-y-8">
+                
+                <!-- 1. Employee Info -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-400 mb-1">Employee Name</label>
+                        <input type="text" id="emp-name" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-green-600 focus:border-transparent" placeholder="Enter full name">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-400 mb-1">Date</label>
+                        <input type="date" id="emp-date" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-green-600 focus:border-transparent color-scheme-dark">
+                        <style>#emp-date::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }</style>
+                    </div>
+                </div>
+
+                <hr class="border-zinc-800">
+
+                <!-- 2A. Main Salary -->
+                <div>
+                    <h3 class="text-lg font-semibold text-green-400 mb-4">Base Salary</h3>
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-400 mb-1">Gaji Pokok</label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 font-medium no-print">Rp</span>
+                            <input type="text" id="gaji-pokok" class="rupiah-input w-full bg-zinc-800 border border-zinc-700 rounded-lg pl-10 pr-4 py-2.5 text-white focus:ring-2 focus:ring-green-600 focus:border-transparent font-medium" placeholder="0">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2B. Reimburse -->
+                <div>
+                    <div class="flex justify-between items-end mb-4">
+                        <h3 class="text-lg font-semibold text-green-400">Reimbursement</h3>
+                        <button type="button" id="add-reimburse-btn" class="no-print text-sm bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-1.5 rounded-md border border-zinc-700 transition-colors flex items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                            Add Item
+                        </button>
+                    </div>
+                    <div id="reimburse-list" class="space-y-3">
+                        <!-- Dynamic items will be injected here -->
+                    </div>
+                </div>
+
+                <!-- 2C. Additional Income -->
+                <div>
+                    <div class="flex justify-between items-end mb-4">
+                        <h3 class="text-lg font-semibold text-green-400">Additional Income</h3>
+                        <button type="button" id="add-additional-btn" class="no-print text-sm bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-1.5 rounded-md border border-zinc-700 transition-colors flex items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                            Add Item
+                        </button>
+                    </div>
+                    <div id="additional-list" class="space-y-3">
+                        <!-- Dynamic items will be injected here -->
+                    </div>
+                </div>
+
+                <hr class="border-zinc-800">
+
+                <!-- 3. Description Section -->
+                <div>
+                    <label class="block text-sm font-medium text-zinc-400 mb-1">Notes / Description</label>
+                    <textarea id="notes" rows="3" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-green-600 focus:border-transparent placeholder-zinc-600" placeholder="Add any details or notes here..."></textarea>
+                </div>
+
+                <!-- 4. Salary Summary -->
+                <div class="bg-green-950/30 border border-green-900/50 rounded-xl p-6 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full blur-3xl"></div>
+                    
+                    <h3 class="text-lg font-bold text-white mb-4 border-b border-green-900/50 pb-2">Salary Summary</h3>
+                    
+                    <div class="space-y-3 text-sm sm:text-base">
+                        <div class="flex justify-between items-center text-zinc-300">
+                            <span>Base Salary</span>
+                            <span id="summary-pokok" class="font-medium">Rp 0</span>
+                        </div>
+                        <div class="flex justify-between items-center text-zinc-300">
+                            <span>Total Reimbursement</span>
+                            <span id="summary-reimburse" class="font-medium">Rp 0</span>
+                        </div>
+                        <div class="flex justify-between items-center text-zinc-300">
+                            <span>Total Additional</span>
+                            <span id="summary-additional" class="font-medium">Rp 0</span>
+                        </div>
+                        
+                        <div class="pt-4 mt-4 border-t border-green-800 flex justify-between items-center">
+                            <span class="text-lg font-bold text-green-400">Grand Total</span>
+                            <span id="grand-total" class="text-2xl font-bold text-white tracking-tight">Rp 0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons (No Print) -->
+                <div class="no-print pt-6 flex flex-col sm:flex-row gap-4 justify-end">
+                    <button type="button" id="reset-btn" class="px-6 py-2.5 border border-zinc-700 hover:bg-zinc-800 text-zinc-300 rounded-lg font-medium transition-colors">
+                        Reset Data
+                    </button>
+                    <button type="button" id="print-btn" class="px-6 py-2.5 bg-green-700 hover:bg-green-600 text-white rounded-lg font-medium shadow-lg shadow-green-900/30 transition-all flex items-center justify-center gap-2 active:scale-95">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                        </svg>
+                        Export PDF / Print
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // --- CONSTANTS & DOM ELEMENTS ---
+            const CREDENTIALS = { username: 'financefay', password: '060301' };
+            const SESSION_KEY = 'salaryAppLoggedIn';
+
+            const loginScreen = document.getElementById('login-screen');
+            const appScreen = document.getElementById('app-screen');
+            const loginForm = document.getElementById('login-form');
+            const loginError = document.getElementById('login-error');
+            const logoutBtn = document.getElementById('logout-btn');
+            
+            // Calculator Elements
+            const gajiPokokInput = document.getElementById('gaji-pokok');
+            const reimburseList = document.getElementById('reimburse-list');
+            const additionalList = document.getElementById('additional-list');
+            const addReimburseBtn = document.getElementById('add-reimburse-btn');
+            const addAdditionalBtn = document.getElementById('add-additional-btn');
+            const resetBtn = document.getElementById('reset-btn');
+            const printBtn = document.getElementById('print-btn');
+
+            // Summary Elements
+            const sumPokok = document.getElementById('summary-pokok');
+            const sumReimburse = document.getElementById('summary-reimburse');
+            const sumAdditional = document.getElementById('summary-additional');
+            const grandTotalEl = document.getElementById('grand-total');
+
+            // --- AUTHENTICATION LOGIC ---
+
+            function checkAuth() {
+                if (sessionStorage.getItem(SESSION_KEY) === 'true') {
+                    showApp();
+                } else {
+                    showLogin();
+                }
+            }
+
+            function showApp() {
+                loginScreen.classList.add('hidden');
+                appScreen.classList.remove('hidden');
+                setDefaultDate();
+                calculateTotals(); // Init calculation
+            }
+
+            function showLogin() {
+                appScreen.classList.add('hidden');
+                loginScreen.classList.remove('hidden');
+                document.getElementById('password').value = '';
+                loginError.classList.add('hidden');
+            }
+
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const userVal = document.getElementById('username').value.trim();
+                const passVal = document.getElementById('password').value;
+
+                if (userVal === CREDENTIALS.username && passVal === CREDENTIALS.password) {
+                    sessionStorage.setItem(SESSION_KEY, 'true');
+                    showApp();
+                } else {
+                    loginError.classList.remove('hidden');
+                    // Shake effect
+                    loginScreen.classList.add('translate-x-1', '-translate-x-1');
+                    setTimeout(() => loginScreen.classList.remove('translate-x-1', '-translate-x-1'), 200);
+                }
+            });
+
+            logoutBtn.addEventListener('click', () => {
+                sessionStorage.removeItem(SESSION_KEY);
+                showLogin();
+                resetForm();
+            });
+
+            // --- CURRENCY FORMATTING LOGIC ---
+            
+            // Parse Rupiah string back to integer
+            function parseRupiah(rupiahString) {
+                if (!rupiahString) return 0;
+                const cleanStr = rupiahString.replace(/[^0-9]/g, '');
+                return parseInt(cleanStr, 10) || 0;
+            }
+
+            // Format integer to Rupiah string format
+            function formatRupiah(angka) {
+                if (angka === 0 || isNaN(angka)) return '';
+                return new Intl.NumberFormat('id-ID').format(angka);
+            }
+
+            // Display format with Rp prefix for summary
+            function formatRupiahDisplay(angka) {
+                return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+            }
+
+            // Handle input event to auto-format while typing
+            function handleRupiahInput(e) {
+                const input = e.target;
+                const rawValue = parseRupiah(input.value);
+                
+                // Save raw value in dataset for easy calculation
+                input.dataset.rawValue = rawValue;
+                
+                // Update display value with formatting
+                input.value = formatRupiah(rawValue);
+                
+                calculateTotals();
+            }
+
+            // Initialize Gaji Pokok formatting
+            gajiPokokInput.addEventListener('input', handleRupiahInput);
+
+
+            // --- DYNAMIC FIELDS LOGIC ---
+
+            function createDynamicRow(containerId, itemTypeClass) {
+                const container = document.getElementById(containerId);
+                const row = document.createElement('div');
+                row.className = 'flex gap-3 items-start animate-[fadeIn_0.2s_ease-out]';
+                
+                row.innerHTML = `
+                    <div class="flex-1">
+                        <input type="text" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-green-600 focus:border-transparent text-sm placeholder-zinc-500" placeholder="Item name">
+                    </div>
+                    <div class="w-1/3 relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 font-medium text-sm no-print">Rp</span>
+                        <input type="text" class="${itemTypeClass} w-full bg-zinc-800 border border-zinc-700 rounded-lg pl-8 pr-3 py-2 text-white focus:ring-2 focus:ring-green-600 focus:border-transparent text-sm font-medium" placeholder="0">
+                    </div>
+                    <button type="button" class="remove-btn no-print p-2 text-zinc-500 hover:text-red-400 hover:bg-zinc-800 rounded-lg transition-colors" title="Remove item">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                `;
+
+                // Attach event listener to new amount input
+                const amountInput = row.querySelector(`.${itemTypeClass}`);
+                amountInput.addEventListener('input', handleRupiahInput);
+
+                // Attach remove event
+                const removeBtn = row.querySelector('.remove-btn');
+                removeBtn.addEventListener('click', () => {
+                    row.remove();
+                    calculateTotals();
+                });
+
+                container.appendChild(row);
+                // Focus on the newly added name input
+                row.querySelector('input[type="text"]').focus();
+            }
+
+            addReimburseBtn.addEventListener('click', () => createDynamicRow('reimburse-list', 'reimburse-amount'));
+            addAdditionalBtn.addEventListener('click', () => createDynamicRow('additional-list', 'additional-amount'));
+
+
+            // --- CALCULATION LOGIC ---
+
+            function calculateTotals() {
+                // 1. Get Base Salary
+                const pokok = parseRupiah(gajiPokokInput.value);
+
+                // 2. Sum Reimbursements
+                let totalReimburse = 0;
+                document.querySelectorAll('.reimburse-amount').forEach(input => {
+                    totalReimburse += parseRupiah(input.value);
+                });
+
+                // 3. Sum Additional
+                let totalAdditional = 0;
+                document.querySelectorAll('.additional-amount').forEach(input => {
+                    totalAdditional += parseRupiah(input.value);
+                });
+
+                // 4. Grand Total
+                const grandTotal = pokok + totalReimburse + totalAdditional;
+
+                // Update UI Summary
+                sumPokok.textContent = formatRupiahDisplay(pokok);
+                sumReimburse.textContent = formatRupiahDisplay(totalReimburse);
+                sumAdditional.textContent = formatRupiahDisplay(totalAdditional);
+                grandTotalEl.textContent = formatRupiahDisplay(grandTotal);
+            }
+
+
+            // --- UTILITIES & ACTIONS ---
+
+            function setDefaultDate() {
+                const dateInput = document.getElementById('emp-date');
+                if (!dateInput.value) {
+                    dateInput.valueAsDate = new Date();
+                }
+            }
+
+            function resetForm() {
+                // Clear text inputs
+                document.getElementById('emp-name').value = '';
+                gajiPokokInput.value = '';
+                document.getElementById('notes').value = '';
+                
+                // Set date back to today
+                setDefaultDate();
+
+                // Clear dynamic lists
+                reimburseList.innerHTML = '';
+                additionalList.innerHTML = '';
+                
+                // Add one empty row for each list by default
+                createDynamicRow('reimburse-list', 'reimburse-amount');
+                createDynamicRow('additional-list', 'additional-amount');
+
+                calculateTotals();
+            }
+
+            resetBtn.addEventListener('click', () => {
+                if(confirm("Are you sure you want to clear all data?")) {
+                    resetForm();
+                }
+            });
+
+            printBtn.addEventListener('click', () => {
+                window.print();
+            });
+
+            // Initialize App State
+            checkAuth();
+            
+            // Setup initial empty rows if not already populated
+            if(reimburseList.children.length === 0) createDynamicRow('reimburse-list', 'reimburse-amount');
+            if(additionalList.children.length === 0) createDynamicRow('additional-list', 'additional-amount');
+        });
+    </script>
+</body>
+</html>
